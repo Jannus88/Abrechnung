@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abrechnung Gasttrainer</title>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #1a365d;
+      --secondary-color: #2b6cb0;
+      --background-color: #f7fafc;
+      --card-background: #ffffff;
+      --text-color: #2d3748;
+      --border-color: #e2e8f0;
+      --error-color: #e53e3e;
+      --success-color: #38a169;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.5;
+      padding: 12px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 16px;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .settings-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    form {
+      background-color: var(--card-background);
+      padding: 20px;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-color);
+      border-top: none;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      color: #4a5568;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 1rem;
+      background-color: #fff;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+    }
+
+    .signature-container {
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background-color: #fff;
+      position: relative;
+      margin-top: 6px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 160px;
+      display: block;
+      border-radius: 6px;
+      touch-action: none;
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      background: #edf2f7;
+      border: 1px solid #cbd5e0;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .legal-notice {
+      font-size: 0.75rem;
+      color: #718096;
+      margin: 16px 0;
+      background-color: #edf2f7;
+      padding: 10px;
+      border-radius: 6px;
+      border-left: 3px solid var(--secondary-color);
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button[type="submit"]:hover {
+      background-color: var(--secondary-color);
+    }
+
+    button[type="submit"]:disabled {
+      background-color: #a0aec0;
+      cursor: not-allowed;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .status-msg {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      display: none;
+      font-size: 0.9rem;
+    }
+
+    .status-msg.error {
+      background-color: #fed7d7;
+      color: #9b2c2c;
+      border: 1px solid #feb2b2;
+      display: block;
+    }
+
+    .status-msg.success {
+      background-color: #c6f6d5;
+      color: #22543d;
+      border: 1px solid #9ae6b4;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Abrechnung Gasttrainer</h1>
+    <button type="button" class="settings-btn" id="openSettings" title="Einstellungen">⚙️</button>
+  </header>
+
+  <form id="receiptForm">
+    <div id="statusBox" class="status-msg"></div>
+
+    <div class="form-group">
+      <label for="trainerName">Name Gasttrainer *</label>
+      <input type="text" id="trainerName" required placeholder="Vor- und Nachname">
+    </div>
+
+    <div class="form-group">
+      <label for="trainerAddress">Anschrift Gasttrainer *</label>
+      <textarea id="trainerAddress" rows="2" required placeholder="Straße, PLZ, Ort"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="trainerIban">IBAN für Auszahlung *</label>
+      <input type="text" id="trainerIban" required placeholder="DE00 0000 0000 0000 0000 00">
+    </div>
+
+    <div class="form-group">
+      <label for="trainerBic">BIC / Kreditinstitut (optional)</label>
+      <input type="text" id="trainerBic" placeholder="z. B. Sparkasse">
+    </div>
+
+    <div class="form-group">
+      <label for="date">Datum der Leistung *</label>
+      <input type="date" id="date" required>
+    </div>
+
+    <div class="form-group">
+      <label for="contactPerson">Übungsleiter / Ansprechpartner *</label>
+      <input type="text" id="contactPerson" required placeholder="Name des Übungsleiters">
+    </div>
+
+    <div class="form-group">
+      <label for="purpose">Verwendungszweck / Gruppe *</label>
+      <input type="text" id="purpose" required placeholder="z.B. Workshop Formation, Vertretung HipHop">
+    </div>
+
+    <div class="form-group">
+      <label for="amount">Auszahlungsbetrag (€) *</label>
+      <input type="number" id="amount" step="0.01" min="0" required placeholder="0.00">
+    </div>
+
+    <div class="form-group">
+      <label>Unterschrift Gasttrainer *</label>
+      <div class="signature-container">
+        <canvas id="signaturePad"></canvas>
+        <button type="button" class="clear-btn" id="clearSignature">Löschen</button>
+      </div>
+    </div>
+
+    <div class="legal-notice">
+      Ich bestätige die Richtigkeit der obigen Angaben sowie die ordnungsgemäße Erbringung der vereinbarten Leistung. Ich fordere den Verein auf, den Betrag auf das oben genannte Konto zu überweisen. Die Versteuerung der Einnahmen erfolgt eigenverantwortlich und die Abrechnung erstelle ich als selbstständiger Auftraggeber für die erbrachte Dienstleistung. Es besteht kein Beschäftigungsverhältnis mit dem Verein.
+    </div>
+
+    <button type="submit" id="submitBtn">Abrechnung einreichen</button>
+  </form>
+
+  <!-- EINSTELLUNGEN MODAL -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <h2 style="margin-bottom: 12px; font-size: 1.2rem;">Einstellungen</h2>
+      <div class="form-group">
+        <label for="scriptUrl">Google Web-App-URL</label>
+        <input type="url" id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+        <small style="color: #718096; font-size: 0.75rem; display: block; margin-top: 4px;">
+          Füge hier die Web-App-URL aus deinem Google Apps Script ein.
+        </small>
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button type="button" id="closeSettings" style="padding: 8px 16px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Schließen</button>
+        <button type="button" id="saveSettings" style="padding: 8px 16px; background: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer;">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Datum auf heute vorbelegen
+    document.getElementById('date').valueAsDate = new Date();
+
+    // Canvas & SignaturePad Initialisierung
+    const canvas = document.getElementById('signaturePad');
+    const signaturePad = new SignaturePad(canvas, {
+      backgroundColor: 'rgb(255, 255, 255)',
+      penColor: 'rgb(0, 0, 128)'
+    });
+
+    function resizeCanvas() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext("2d").scale(ratio, ratio);
+      signaturePad.clear();
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    document.getElementById('clearSignature').addEventListener('click', () => {
+      signaturePad.clear();
+    });
+
+    // Einstellungen Logik
+    const settingsModal = document.getElementById('settingsModal');
+    const scriptUrlInput = document.getElementById('scriptUrl');
+    
+    // TIPP: Wenn du deine Google Web-App URL hier zwischen die Anführungszeichen einträgst,
+    // müssen deine Übungsleiter sie nicht mehr über das Zahnrad eingeben!
+    let scriptUrl = localStorage.getItem('gas_script_url') || 'https://script.google.com/macros/s/AKfycbwMubjZJ37hK9xRjFbrQvsWlrIrnie7MQ9UAJ8NYyosoaJuleB9180nWZb5vA0wsZHd/exec';
+    scriptUrlInput.value = scriptUrl;
+
+    document.getElementById('openSettings').addEventListener('click', () => {
+      settingsModal.style.display = 'flex';
+    });
+
+    document.getElementById('closeSettings').addEventListener('click', () => {
+      settingsModal.style.display = 'none';
+    });
+
+    document.getElementById('saveSettings').addEventListener('click', () => {
+      scriptUrl = scriptUrlInput.value.trim();
+      localStorage.setItem('gas_script_url', scriptUrl);
+      settingsModal.style.display = 'none';
+      showStatus('Einstellungen gespeichert!', 'success');
+    });
+
+    // Formular Absenden
+    const form = document.getElementById('receiptForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusBox = document.getElementById('statusBox');
+
+    function showStatus(message, type) {
+      statusBox.textContent = message;
+      statusBox.className = `status-msg ${type}`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!scriptUrl) {
+        showStatus('Bitte trage zuerst die Google Web-App-URL in den Einstellungen (⚙️) ein.', 'error');
+        return;
+      }
+
+      if (signaturePad.isEmpty()) {
+        showStatus('Bitte lass den Gasttrainer im Unterschriftenfeld unterschreiben.', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Wird gesendet...';
+      statusBox.className = 'status-msg';
+
+      const payload = {
+        trainerName: document.getElementById('trainerName').value,
+        trainerAddress: document.getElementById('trainerAddress').value,
+        trainerIban: document.getElementById('trainerIban').value,
+        trainerBic: document.getElementById('trainerBic').value,
+        date: document.getElementById('date').value,
+        contactPerson: document.getElementById('contactPerson').value,
+        purpose: document.getElementById('purpose').value,
+        amount: document.getElementById('amount').value,
+        signature: signaturePad.toDataURL('image/png')
+      };
+
+      try {
+        const response = await fetch(scriptUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
+
+        showStatus('Abrechnung erfolgreich eingereicht! Die PDF wird direkt per E-Mail zugestellt.', 'success');
+        form.reset();
+        signaturePad.clear();
+        document.getElementById('date').valueAsDate = new Date();
+      } catch (err) {
+        showStatus('Fehler beim Senden: ' + err.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Abrechnung einreichen';
+      }
+    });
+  </script>
+</body>
+</html>
