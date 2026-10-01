@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Abrechnung Gasttrainer</title>
+  <title>Vereinsabrechnung</title>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
   <style>
     :root {
@@ -78,7 +78,7 @@
       color: #4a5568;
     }
 
-    input, textarea {
+    input, select, textarea {
       width: 100%;
       padding: 10px 12px;
       border: 1px solid var(--border-color);
@@ -87,7 +87,7 @@
       background-color: #fff;
     }
 
-    input:focus, textarea:focus {
+    input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: var(--secondary-color);
       box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
@@ -119,6 +119,21 @@
       border-radius: 4px;
       font-size: 0.8rem;
       cursor: pointer;
+    }
+
+    .preview-container {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .preview-img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
     }
 
     .legal-notice {
@@ -203,20 +218,34 @@
 <body>
 
   <header>
-    <h1>Abrechnung Gasttrainer</h1>
-    <button type="button" class="settings-btn" id="openSettings" title="Einstellungen">⚙️</button>
-  </header>
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <!-- Passe den src-Pfad an dein Logo an (z. B. logo.png) -->
+    <img src="logo.png" alt="Vereinslogo" id="clubLogo" style="max-height: 40px; max-width: 100px; object-fit: contain;">
+    <h1>Vereinsabrechnung</h1>
+  </div>
+  <button type="button" class="settings-btn" id="openSettings" title="Einstellungen">⚙️</button>
+</header>
 
   <form id="receiptForm">
     <div id="statusBox" class="status-msg"></div>
 
     <div class="form-group">
-      <label for="trainerName">Name Gasttrainer *</label>
+      <label for="category">Art der Abrechnung *</label>
+      <select id="category" required>
+        <option value="Abrechnung Gasttrainer">Abrechnung Gasttrainer</option>
+        <option value="Abrechnung Trainingsleistung">Abrechnung Trainingsleistung</option>
+        <option value="Auslagenerstattung">Auslagenerstattung</option>
+        <option value="Sonstiges">Sonstiges</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="trainerName" id="lblTrainerName">Name Antragsteller / Person *</label>
       <input type="text" id="trainerName" required placeholder="Vor- und Nachname">
     </div>
 
     <div class="form-group">
-      <label for="trainerAddress">Anschrift Gasttrainer *</label>
+      <label for="trainerAddress">Anschrift *</label>
       <textarea id="trainerAddress" rows="2" required placeholder="Straße, PLZ, Ort"></textarea>
     </div>
 
@@ -231,18 +260,18 @@
     </div>
 
     <div class="form-group">
-      <label for="date">Datum der Leistung *</label>
+      <label for="date">Datum der Leistung / Auslage *</label>
       <input type="date" id="date" required>
     </div>
 
     <div class="form-group">
       <label for="contactPerson">Übungsleiter / Ansprechpartner *</label>
-      <input type="text" id="contactPerson" required placeholder="Name des Übungsleiters">
+      <input type="text" id="contactPerson" required placeholder="Name des Verantwortlichen">
     </div>
 
     <div class="form-group">
-      <label for="purpose">Verwendungszweck / Gruppe *</label>
-      <input type="text" id="purpose" required placeholder="z.B. Workshop Formation, Vertretung HipHop">
+      <label for="purpose">Verwendungszweck / Beschreibung *</label>
+      <input type="text" id="purpose" required placeholder="z. B. Materialkauf, Vertretung, Workshop">
     </div>
 
     <div class="form-group">
@@ -251,7 +280,13 @@
     </div>
 
     <div class="form-group">
-      <label>Unterschrift Gasttrainer *</label>
+      <label for="attachment">Anhang / Foto beifügen (Beleg, Foto, Rechnung)</label>
+      <input type="file" id="attachment" accept="image/*,application/pdf" capture="environment">
+      <div class="preview-container" id="previewContainer"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Unterschrift *</label>
       <div class="signature-container">
         <canvas id="signaturePad"></canvas>
         <button type="button" class="clear-btn" id="clearSignature">Löschen</button>
@@ -259,7 +294,7 @@
     </div>
 
     <div class="legal-notice">
-      Ich bestätige die Richtigkeit der obigen Angaben sowie die ordnungsgemäße Erbringung der vereinbarten Leistung. Ich fordere den Verein auf, den Betrag auf das oben genannte Konto zu überweisen. Die Versteuerung der Einnahmen erfolgt eigenverantwortlich und die Abrechnung erstelle ich als selbstständiger Auftraggeber für die erbrachte Dienstleistung. Es besteht kein Beschäftigungsverhältnis mit dem Verein.
+      Mit meiner Unterschrift bestätige ich die Richtigkeit aller Angaben sowie die ordnungsgemäße Erbringung der Leistung bzw. Entstehung der Auslagen. Ich fordere den Verein auf, den Betrag auf die oben genannte Bankverbindung zu überweisen.
     </div>
 
     <button type="submit" id="submitBtn">Abrechnung einreichen</button>
@@ -272,9 +307,6 @@
       <div class="form-group">
         <label for="scriptUrl">Google Web-App-URL</label>
         <input type="url" id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
-        <small style="color: #718096; font-size: 0.75rem; display: block; margin-top: 4px;">
-          Füge hier die Web-App-URL aus deinem Google Apps Script ein.
-        </small>
       </div>
       <div style="display: flex; gap: 8px; justify-content: flex-end;">
         <button type="button" id="closeSettings" style="padding: 8px 16px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Schließen</button>
@@ -284,10 +316,8 @@
   </div>
 
   <script>
-    // Datum auf heute vorbelegen
     document.getElementById('date').valueAsDate = new Date();
 
-    // Canvas & SignaturePad Initialisierung
     const canvas = document.getElementById('signaturePad');
     const signaturePad = new SignaturePad(canvas, {
       backgroundColor: 'rgb(255, 255, 255)',
@@ -309,13 +339,38 @@
       signaturePad.clear();
     });
 
+    // Vorschau für Anhang
+    let attachmentBase64 = '';
+    let attachmentFileName = '';
+
+    document.getElementById('attachment').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const previewContainer = document.getElementById('previewContainer');
+      previewContainer.innerHTML = '';
+
+      if (file) {
+        attachmentFileName = file.name;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          attachmentBase64 = evt.target.result;
+          if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = evt.target.result;
+            img.className = 'preview-img';
+            previewContainer.appendChild(img);
+          } else {
+            previewContainer.textContent = '📄 Datei ausgewählt: ' + file.name;
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
     // Einstellungen Logik
     const settingsModal = document.getElementById('settingsModal');
     const scriptUrlInput = document.getElementById('scriptUrl');
     
-    // TIPP: Wenn du deine Google Web-App URL hier zwischen die Anführungszeichen einträgst,
-    // müssen deine Übungsleiter sie nicht mehr über das Zahnrad eingeben!
-    let scriptUrl = localStorage.getItem('gas_script_url') || 'https://script.google.com/macros/s/AKfycbwMubjZJ37hK9xRjFbrQvsWlrIrnie7MQ9UAJ8NYyosoaJuleB9180nWZb5vA0wsZHd/exec';
+    let scriptUrl = localStorage.getItem('gas_script_url') || '';
     scriptUrlInput.value = scriptUrl;
 
     document.getElementById('openSettings').addEventListener('click', () => {
@@ -352,7 +407,7 @@
       }
 
       if (signaturePad.isEmpty()) {
-        showStatus('Bitte lass den Gasttrainer im Unterschriftenfeld unterschreiben.', 'error');
+        showStatus('Bitte trage eine Unterschrift ein.', 'error');
         return;
       }
 
@@ -361,6 +416,7 @@
       statusBox.className = 'status-msg';
 
       const payload = {
+        category: document.getElementById('category').value,
         trainerName: document.getElementById('trainerName').value,
         trainerAddress: document.getElementById('trainerAddress').value,
         trainerIban: document.getElementById('trainerIban').value,
@@ -369,11 +425,13 @@
         contactPerson: document.getElementById('contactPerson').value,
         purpose: document.getElementById('purpose').value,
         amount: document.getElementById('amount').value,
-        signature: signaturePad.toDataURL('image/png')
+        signature: signaturePad.toDataURL('image/png'),
+        attachment: attachmentBase64,
+        attachmentName: attachmentFileName
       };
 
       try {
-        const response = await fetch(scriptUrl, {
+        await fetch(scriptUrl, {
           method: 'POST',
           mode: 'no-cors',
           headers: {
@@ -382,9 +440,12 @@
           body: JSON.stringify(payload)
         });
 
-        showStatus('Abrechnung erfolgreich eingereicht! Die PDF wird direkt per E-Mail zugestellt.', 'success');
+        showStatus('Abrechnung erfolgreich eingereicht! PDF und Anhang wurden versendet.', 'success');
         form.reset();
         signaturePad.clear();
+        attachmentBase64 = '';
+        attachmentFileName = '';
+        document.getElementById('previewContainer').innerHTML = '';
         document.getElementById('date').valueAsDate = new Date();
       } catch (err) {
         showStatus('Fehler beim Senden: ' + err.message, 'error');
